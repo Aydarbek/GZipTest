@@ -10,9 +10,10 @@ namespace GZipTest
         static void Main(string[] args)
         {
             FileProcessor fileProcessor = new FileProcessor();
-            FileInfo fileName = new FileInfo (@"D:\Repos\GZipTest\bin\Debug\getAllCrossConnections.xml");
+            FileInfo fileName = new FileInfo (@"D:\Repos\GZipTest\bin\Debug\test.txt");
             //fileProcessor.Split(fileName);
-            fileProcessor.Merge(@"D:\Repos\GZipTest\bin\Debug\getAllCrossConnections.xml");
+            fileProcessor.RestoreFile(new FileInfo(@"D:\Repos\GZipTest\bin\Debug\test.txt_headered"),
+                new FileInfo(@"D:\Repos\GZipTest\bin\Debug\test.txt_restored"));
 
             Console.ReadLine();
 

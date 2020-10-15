@@ -9,19 +9,19 @@ namespace GZipTest
     internal struct FileHeader
     {
         public int blockNum { get; set; }
-        public int totalBlocks { get; set; }
         public int blockSize { get; set; }
+        public bool isEndOfFile { get; set; }
 
-        public FileHeader(int blockNum, int totalBlocks, int blockSize)
+        public FileHeader(int blockNum, int blockSize, bool isEndOfFile)
         {
             this.blockNum = blockNum;
-            this.totalBlocks = totalBlocks;
             this.blockSize = blockSize;
+            this.isEndOfFile = isEndOfFile;
         }
 
         public override string ToString()
         {
-            return $"Block {blockNum} from {totalBlocks}. Block size {blockSize} bytes";
+            return $"Block {blockNum}. Block size {blockSize} bytes. Is last block: {isEndOfFile}";
         }
     }
 }

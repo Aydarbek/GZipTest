@@ -36,68 +36,87 @@ namespace GZipTest
             Console.ReadLine();
         }
 
-        public void Split(FileInfo fileToSplit)
+        public void Split(FileInfo processingFile)
         {
-            using (FileStream fileToSplitStream = fileToSplit.OpenRead())
+            FileStream stream = File.Create($"{processingFile.Name}_headered");
+            stream.Close();
+
+            for (long offset = 0; offset < processingFile.Length; offset += partSize)
             {
-                CalculateTotalBlocks(fileToSplitStream.Length);
+                HeaderedFilePreparer headeredFilePreparer = new HeaderedFilePreparer(processingFile, offset, part);
+                Thread headerThread = new Thread(new ThreadStart(headeredFilePreparer.PrepareHeaderedFile));
+                headerThread.Name = $"Thread_{part++}";
+                headerThread.Start();
+            }
+        }
 
-                for (int offset = 0; offset < fileToSplit.Length; offset += partSize)
+        public void RestoreFile(FileInfo fileToRestore, FileInfo resultFile)
+        {
+            FileHeader currentHeader;
+
+            using (FileStream fileToRestoreStream = fileToRestore.OpenRead())
+            {
+                FileHeader firstHeader = FileHeaderHandler.ReadFileHeader(fileToRestoreStream);
+                FileRestorer fileRestorer = new FileRestorer(resultFile);
+                Thread fileRetoreThread = new Thread(new ThreadStart(fileRestorer.WriteFileBytesToStream));
+                fileRetoreThread.Start();
+                
+                byte[] firstFileByte = new byte[firstHeader.blockSize];
+                fileToRestoreStream.Seek(headerSize, SeekOrigin.Begin);
+                fileToRestoreStream.Read(firstFileByte, 0, firstFileByte.Length);
+                fileRestorer.PutFileBytes(firstHeader.blockNum, firstFileByte, firstHeader.isEndOfFile);
+
+                while (fileToRestoreStream.Position < fileToRestoreStream.Length)
                 {
-                    using (FileStream splitFile = File.Create($"{fileToSplit.Name}_part{part}"))
-                    {
-                        byte[] bytes = new byte[Math.Min(partSize, fileToSplit.Length - offset)];
-                        FileHeader fileHeader = new FileHeader(part++, totalBlocks, bytes.Length);
-
-                        FileHeaderHandler.WriteFileHeader(splitFile, fileHeader);
-                        fileToSplitStream.Seek(offset, SeekOrigin.Begin);
-                        fileToSplitStream.Read(bytes, 0, bytes.Length);
-                        splitFile.Write(bytes, 0, bytes.Length);
-                    }
+                    currentHeader = FileHeaderHandler.ReadFileHeader(fileToRestoreStream);
+                    byte[] fileBytes = new byte[currentHeader.blockSize];
+                    fileToRestoreStream.Read(fileBytes, 0, fileBytes.Length);
+                    fileRestorer.PutFileBytes(currentHeader.blockNum, fileBytes, currentHeader.isEndOfFile);
                 }
+
             }
         }
 
 
-        public void Merge(string fileName)
-        {            
-            using (FileStream resultFile = File.Create(fileName))
-            {
-                FileInfo firstPart = new FileInfo($"{fileName}_part1");
-                FileHeader firstFileHeader;
-                FileHeader filePartHeader;
 
-                using (FileStream firstFileStream = firstPart.OpenRead())
-                {
-                    firstFileHeader = FileHeaderHandler.ReadFileHeader(firstFileStream);
-                    Console.WriteLine(firstFileHeader.ToString());
-                    byte[] firstFileByte = new byte[firstFileStream.Length - headerSize];
-                    firstFileStream.Seek(headerSize, SeekOrigin.Begin);
-                    firstFileStream.Read(firstFileByte, 0, firstFileByte.Length);
-                    resultFile.Write(firstFileByte, 0, firstFileByte.Length);
-                }
+        //public void Merge(string fileName)
+        //{            
+        //    using (FileStream resultFile = File.Create(fileName))
+        //    {
+        //        FileInfo firstPart = new FileInfo($"{fileName}_part1");
+        //        FileHeader firstFileHeader;
+        //        FileHeader filePartHeader;
 
-                firstPart.Delete();
+        //        using (FileStream firstFileStream = firstPart.OpenRead())
+        //        {
+        //            firstFileHeader = FileHeaderHandler.ReadFileHeader(firstFileStream);
+        //            Console.WriteLine(firstFileHeader.ToString());
+        //            byte[] firstFileByte = new byte[firstFileStream.Length - headerSize];
+        //            firstFileStream.Seek(headerSize, SeekOrigin.Begin);
+        //            firstFileStream.Read(firstFileByte, 0, firstFileByte.Length);
+        //            resultFile.Write(firstFileByte, 0, firstFileByte.Length);
+        //        }
+
+        //        firstPart.Delete();
 
                 
-                for (int part = 2; part <= firstFileHeader.totalBlocks; part++)
-                {
-                    FileInfo filePart = new FileInfo($"{fileName}_part{part}");
+        //        for (int part = 2; part <= firstFileHeader.totalBlocks; part++)
+        //        {
+        //            FileInfo filePart = new FileInfo($"{fileName}_part{part}");
 
-                    using (FileStream filePartStream = filePart.OpenRead())
-                    {
-                        filePartHeader = FileHeaderHandler.ReadFileHeader(filePartStream);
-                        Console.WriteLine(filePartHeader.ToString());
-                        byte[] partFileByte = new byte[filePartStream.Length - headerSize];
-                        filePartStream.Seek(headerSize, SeekOrigin.Begin);
-                        filePartStream.Read(partFileByte, 0, partFileByte.Length);
-                        resultFile.Write(partFileByte, 0, partFileByte.Length);
-                    }
-                    filePart.Delete();
-
-                }
-            }
-        }
+        //            using (FileStream filePartStream = filePart.OpenRead())
+        //            {
+        //                filePartHeader = FileHeaderHandler.ReadFileHeader(filePartStream);
+        //                Console.WriteLine(filePartHeader.ToString());
+        //                byte[] partFileByte = new byte[filePartStream.Length - headerSize];
+        //                filePartStream.Seek(headerSize, SeekOrigin.Begin);
+        //                filePartStream.Read(partFileByte, 0, partFileByte.Length);
+        //                resultFile.Write(partFileByte, 0, partFileByte.Length);
+        //            }
+        //            filePart.Delete();
+        //        }
+        //    }
+        //}
 
         private void CalculateTotalBlocks(long totalFileSize)
         {

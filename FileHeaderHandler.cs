@@ -10,7 +10,7 @@ namespace GZipTest
 {
     class FileHeaderHandler
     {
-        internal const int HEADER_SIZE = 128;
+        internal const int HEADER_SIZE = 64;
 
         internal static void WriteFileHeader(FileStream stream, FileHeader fileHeader)
         {
@@ -23,13 +23,11 @@ namespace GZipTest
                 headerStream[i] = headerInfoBytes[i];
 
             stream.Write(headerStream, 0, HEADER_SIZE);
-            Console.WriteLine($"Header size {headerInfoBytes.Length}");
         }
 
         internal static FileHeader ReadFileHeader(FileStream stream)
         {
             byte[] byteArray = new byte[HEADER_SIZE];
-            stream.Seek(0, SeekOrigin.Begin);
             stream.Read(byteArray, 0, HEADER_SIZE);
 
             string fileHeaderString = Encoding.Default.GetString(byteArray).Trim();
