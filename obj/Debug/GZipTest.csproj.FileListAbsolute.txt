@@ -5,3 +5,6 @@ D:\Repos\GZipTest\obj\Debug\GZipTest.csprojAssemblyReference.cache
 D:\Repos\GZipTest\obj\Debug\GZipTest.csproj.CoreCompileInputs.cache
 D:\Repos\GZipTest\obj\Debug\GZipTest.exe
 D:\Repos\GZipTest\obj\Debug\GZipTest.pdb
+D:\Repos\GZipTest\bin\Debug\Newtonsoft.Json.dll
+D:\Repos\GZipTest\bin\Debug\Newtonsoft.Json.xml
+D:\Repos\GZipTest\obj\Debug\GZipTest.csproj.CopyComplete
