@@ -47,6 +47,7 @@ namespace GZipTest
             for (long offset = 0; offset < processingFile.Length; offset += partSize)
             {
                 HeaderedFilePreparer headeredFilePreparer = new HeaderedFilePreparer(processingFile, offset, part);
+                //headeredFilePreparer.PrepareHeaderedFile();
                 Thread headerThread = new Thread(new ThreadStart(headeredFilePreparer.PrepareHeaderedFile));
                 headerThread.Name = $"Thread_{part++}";
                 headerThread.Start();

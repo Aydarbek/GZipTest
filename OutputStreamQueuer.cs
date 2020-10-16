@@ -11,11 +11,10 @@ namespace GZipTest
 {
     class OutputStreamQueuer
     {
-        ConcurrentQueue<byte[]> streamQueue = new ConcurrentQueue<byte[]>();
+        ConcurrentQueue<ZipBlock> streamQueue = new ConcurrentQueue<ZipBlock>();
         internal FileInfo outputFile { get; set; }
         bool isEndOfFile;
         private static OutputStreamQueuer outputStreamQueuer;
-
 
         private OutputStreamQueuer()  {}
 
@@ -27,10 +26,12 @@ namespace GZipTest
             return outputStreamQueuer;
         }
 
-        internal void WriteBytesToQueue(byte[] inputBytes, bool isEndOfFile)
+        internal void WriteBytesToQueue(int blockNum, byte[] inputBytes, bool isEndOfFile)
         {
-            streamQueue.Enqueue(inputBytes);
-            this.isEndOfFile = isEndOfFile;
+            streamQueue.Enqueue(new ZipBlock(blockNum, inputBytes, isEndOfFile));
+            
+            if (isEndOfFile)
+                this.isEndOfFile = true;
         }
 
         internal void WriteStreamBytesToFile()
@@ -41,9 +42,13 @@ namespace GZipTest
                 {
                     if (!streamQueue.IsEmpty)
                     {
-                        byte[] nextBlock;
+                        ZipBlock nextBlock;
                         streamQueue.TryDequeue(out nextBlock);
-                        outputFileStream.Write(nextBlock, 0, nextBlock.Length);
+
+                        FileHeader fileHeader = new FileHeader(nextBlock.blockNum, nextBlock.blockData.Length, nextBlock.isEndOfFile);
+                        FileHeaderHandler.WriteFileHeader(outputFileStream, fileHeader);
+
+                        outputFileStream.Write(nextBlock.blockData, 0, nextBlock.blockData.Length);
                         Thread.Sleep(100);
                     }
 

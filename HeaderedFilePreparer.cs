@@ -44,7 +44,7 @@ namespace GZipTest
                     fileToProcessStream.Read(bytes, 0, bytes.Length);
 
                     byte[] zipBytes = Compress(bytes);
-                    OutputStreamQueuer.GetInstance().WriteBytesToQueue(zipBytes, isEndOfFile);
+                    OutputStreamQueuer.GetInstance().WriteBytesToQueue(part, zipBytes, isEndOfFile);
                 }
 
                 Console.WriteLine($"{Thread.CurrentThread.Name} finished. {DateTime.Now.ToString("HH:mm:ss.fff")}");
