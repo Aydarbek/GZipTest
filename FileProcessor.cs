@@ -36,10 +36,13 @@ namespace GZipTest
             Console.ReadLine();
         }
 
-        public void Split(FileInfo processingFile)
+        public void CompressFile(FileInfo processingFile)
         {
-            FileStream stream = File.Create($"{processingFile.Name}_headered");
-            stream.Close();
+            FileInfo compressedFile = new FileInfo($"{processingFile.Name}_headered");
+            OutputStreamQueuer outputStreamQueuer = OutputStreamQueuer.GetInstance();
+            outputStreamQueuer.outputFile = compressedFile;
+            Thread compressThread = new Thread(new ThreadStart(outputStreamQueuer.WriteStreamBytesToFile));
+            compressThread.Start();
 
             for (long offset = 0; offset < processingFile.Length; offset += partSize)
             {
@@ -58,8 +61,8 @@ namespace GZipTest
             {
                 FileHeader firstHeader = FileHeaderHandler.ReadFileHeader(fileToRestoreStream);
                 FileRestorer fileRestorer = new FileRestorer(resultFile);
-                Thread fileRetoreThread = new Thread(new ThreadStart(fileRestorer.WriteFileBytesToStream));
-                fileRetoreThread.Start();
+                Thread fileRestoreThread = new Thread(new ThreadStart(fileRestorer.WriteFileBytesToStream));
+                fileRestoreThread.Start();
                 
                 byte[] firstFileByte = new byte[firstHeader.blockSize];
                 fileToRestoreStream.Seek(headerSize, SeekOrigin.Begin);

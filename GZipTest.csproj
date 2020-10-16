@@ -53,6 +53,7 @@
     <Compile Include="FileRestorer.cs" />
     <Compile Include="GZipArchiver.cs" />
     <Compile Include="HeaderedFilePreparer.cs" />
+    <Compile Include="OutputStreamQueuer.cs" />
     <Compile Include="PartZipPreparer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

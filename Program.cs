@@ -11,9 +11,9 @@ namespace GZipTest
         {
             FileProcessor fileProcessor = new FileProcessor();
             FileInfo fileName = new FileInfo (@"D:\Repos\GZipTest\bin\Debug\test.txt");
-            //fileProcessor.Split(fileName);
-            fileProcessor.RestoreFile(new FileInfo(@"D:\Repos\GZipTest\bin\Debug\test.txt_headered"),
-                new FileInfo(@"D:\Repos\GZipTest\bin\Debug\test.txt_restored"));
+            fileProcessor.CompressFile(fileName);
+            //fileProcessor.RestoreFile(new FileInfo(@"D:\Repos\GZipTest\bin\Debug\test.txt_headered"),
+            //    new FileInfo(@"D:\Repos\GZipTest\bin\Debug\test.txt_restored"));
 
             Console.ReadLine();
 

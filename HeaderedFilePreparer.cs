@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -39,15 +40,11 @@ namespace GZipTest
 
                 using (FileStream fileToProcessStream = processingFile.OpenRead())
                 {
-                    locker.AcquireWriterLock(int.MaxValue);
-                    using (FileStream headeredFile = new FileStream($"{processingFile.Name}_headered", FileMode.Append))
-                    {
-                        FileHeaderHandler.WriteFileHeader(headeredFile, fileHeader);
-                        fileToProcessStream.Seek(offset, SeekOrigin.Begin);
-                        fileToProcessStream.Read(bytes, 0, bytes.Length);
-                        headeredFile.Write(bytes, 0, bytes.Length);
-                    }
-                    locker.ReleaseWriterLock();
+                    fileToProcessStream.Seek(offset, SeekOrigin.Begin);
+                    fileToProcessStream.Read(bytes, 0, bytes.Length);
+
+                    byte[] zipBytes = Compress(bytes);
+                    OutputStreamQueuer.GetInstance().WriteBytesToQueue(zipBytes, isEndOfFile);
                 }
 
                 Console.WriteLine($"{Thread.CurrentThread.Name} finished. {DateTime.Now.ToString("HH:mm:ss.fff")}");
@@ -55,6 +52,20 @@ namespace GZipTest
             catch (Exception)
             {
                 throw;
+            }
+
+        }
+
+        internal byte[] Compress(byte[] inputBytes)
+        {
+            using(MemoryStream outStream = new MemoryStream())
+            {
+                using (MemoryStream inStream = new MemoryStream(inputBytes))
+                using (GZipStream zipStream = new GZipStream(outStream, CompressionMode.Compress))
+                {
+                    inStream.CopyTo(zipStream);
+                }
+                return outStream.ToArray();
             }
         }
     }
