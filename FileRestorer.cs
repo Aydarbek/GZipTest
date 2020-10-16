@@ -25,7 +25,8 @@ namespace GZipTest
         internal void PutFileBytes(int blockNum, byte[] fileStream, bool isEndOfFile)
         {
             fileStreams.TryAdd(blockNum, fileStream);
-            this.isEndOfFile = isEndOfFile;
+            if (isEndOfFile)
+                this.isEndOfFile = true;
         }
 
         internal void WriteFileBytesToStream()
@@ -41,13 +42,16 @@ namespace GZipTest
                         resultFileStream.Write(currentWaitingStream, 0, currentWaitingStream.Length);
                         fileStreams.TryRemove(currentWaitingBlock, out currentWaitingStream);
                         currentWaitingBlock++;
-
-                        if (isEndOfFile && fileStreams.IsEmpty)
-                            break;
                     }
 
                     else
                     {
+                        if (isEndOfFile && fileStreams.IsEmpty)
+                        {
+                            Console.WriteLine("File has been decompressed.");
+                            break;
+                        }
+
                         Console.WriteLine($"Waiting for next block: number {currentWaitingBlock}");
                         Thread.Sleep(100);
                     }

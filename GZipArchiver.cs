@@ -10,37 +10,28 @@ namespace GZipTest
 {
     class GZipArchiver
     {
-        public static void Compress(FileInfo sourceFile)
+        internal static byte[] Compress(byte[] inputBytes)
         {
-            using (FileStream sourceFileStream = sourceFile.OpenRead())
+            using(MemoryStream outStream = new MemoryStream())
             {
-                using (FileStream compressedFile = File.Create(sourceFile.FullName + ".gzip"))
+                using (MemoryStream inStream = new MemoryStream(inputBytes))
+                using (GZipStream zipStream = new GZipStream(outStream, CompressionMode.Compress))
                 {
-                    using (GZipStream compressionStream = new GZipStream(compressedFile, CompressionMode.Compress))
-                    {
-                        sourceFileStream.CopyTo(compressionStream);
-                    }
+                    inStream.CopyTo(zipStream);
                 }
-
-                FileInfo info = new FileInfo(sourceFile.Name + ".gzip");
-                Console.WriteLine($"Compressed {sourceFile.Name} from {sourceFile.Length.ToString()} to {info.Length.ToString()} bytes.");
+                return outStream.ToArray();
             }
         }
 
-        public static void Decompress(FileInfo zipFile)
+        internal static byte[] Decompress(byte[] inputBytes)
         {
-            using (FileStream zipFileStream = zipFile.OpenRead())
+            using (MemoryStream inputStream = new MemoryStream(inputBytes))
             {
-                string zipFileName = zipFile.FullName;
-                string unzippedFileName = zipFileName.Remove(zipFileName.Length - zipFile.Extension.Length);
-
-                using (FileStream unpackedFile = File.Create(unzippedFileName))
+                using (MemoryStream outStream = new MemoryStream())
+                using (GZipStream zipStream = new GZipStream(inputStream, CompressionMode.Decompress))
                 {
-                    using (GZipStream decompressionStream = new GZipStream(zipFileStream, CompressionMode.Decompress))
-                    {
-                        decompressionStream.CopyTo(unpackedFile);
-                        Console.WriteLine($"File {zipFile.Name} decompressed");
-                    }
+                    zipStream.CopyTo(outStream);
+                    return outStream.ToArray();
                 }
             }
         }

@@ -43,7 +43,7 @@ namespace GZipTest
                     fileToProcessStream.Seek(offset, SeekOrigin.Begin);
                     fileToProcessStream.Read(bytes, 0, bytes.Length);
 
-                    byte[] zipBytes = Compress(bytes);
+                    byte[] zipBytes = GZipArchiver.Compress(bytes);
                     OutputStreamQueuer.GetInstance().WriteBytesToQueue(part, zipBytes, isEndOfFile);
                 }
 
@@ -54,19 +54,6 @@ namespace GZipTest
                 throw;
             }
 
-        }
-
-        internal byte[] Compress(byte[] inputBytes)
-        {
-            using(MemoryStream outStream = new MemoryStream())
-            {
-                using (MemoryStream inStream = new MemoryStream(inputBytes))
-                using (GZipStream zipStream = new GZipStream(outStream, CompressionMode.Compress))
-                {
-                    inStream.CopyTo(zipStream);
-                }
-                return outStream.ToArray();
-            }
         }
     }
 }
