@@ -49,10 +49,10 @@
   <ItemGroup>
     <Compile Include="FileHeader.cs" />
     <Compile Include="FileHeaderHandler.cs" />
-    <Compile Include="FileProcessor.cs" />
-    <Compile Include="FileRestorer.cs" />
+    <Compile Include="Archivator.cs" />
+    <Compile Include="DecompressionQueuer.cs" />
     <Compile Include="GZipArchiver.cs" />
-    <Compile Include="HeaderedFilePreparer.cs" />
+    <Compile Include="CompressionQueuer.cs" />
     <Compile Include="OutputStreamQueuer.cs" />
     <Compile Include="PartZipPreparer.cs" />
     <Compile Include="Program.cs" />

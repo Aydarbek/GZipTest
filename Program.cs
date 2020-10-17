@@ -7,15 +7,36 @@ namespace GZipTest
 {
     class Program
     {
-        static void Main(string[] args)
-        {
-            FileProcessor fileProcessor = new FileProcessor();
-            FileInfo fileName = new FileInfo (@"D:\Repos\GZipTest\bin\Debug\getAllCrossConnections.xml");
-            //fileProcessor.CompressFile(fileName);
-            fileProcessor.DecompressFile(new FileInfo(@"D:\Repos\GZipTest\bin\Debug\test.txt_headered"),
-                new FileInfo(@"D:\Repos\GZipTest\bin\Debug\test.txt_restored"));
+        const string argumentExceptionText = "Incorrect command";
 
-            Console.ReadLine();
+        static int Main(string[] args)
+        {
+            try
+            {
+                if (args != null)
+                    ValidateInput(args);
+
+                if ("compress".Equals(args[0]))
+                    Archivator.GetInstance().CompressFile(new FileInfo(args[1]), new FileInfo(args[2]));
+
+                else if ("decompress".Equals(args[0]))
+                    Archivator.GetInstance().DecompressFile(new FileInfo(args[1]), new FileInfo(args[2]));
+
+                else
+                    throw new ArgumentException(argumentExceptionText);
+
+                return 0;
+        }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return 1;
+            }
+        }
+
+        private static void ValidateInput(string [] args)
+        {
+            
         }
     }
 }

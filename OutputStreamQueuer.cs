@@ -48,9 +48,9 @@ namespace GZipTest
                         FileHeader fileHeader = new FileHeader(nextBlock.blockNum, nextBlock.blockData.Length, nextBlock.isEndOfFile);
                         FileHeaderHandler.WriteFileHeader(outputFileStream, fileHeader);
 
-                        Console.WriteLine($"Writing block {nextBlock.blockNum}");
+                        Console.WriteLine($"Writing block {nextBlock.blockNum}.         {DateTime.Now.ToString("HH:mm:ss.fff")}");
                         outputFileStream.Write(nextBlock.blockData, 0, nextBlock.blockData.Length);
-                        Thread.Sleep(100);
+                        outputFileStream.Flush();
                     }
 
                     else
