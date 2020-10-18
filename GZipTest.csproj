@@ -54,7 +54,6 @@
     <Compile Include="GZipArchiver.cs" />
     <Compile Include="CompressionQueuer.cs" />
     <Compile Include="OutputStreamQueuer.cs" />
-    <Compile Include="PartZipPreparer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ZipBlock.cs" />

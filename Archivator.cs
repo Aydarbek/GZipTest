@@ -11,9 +11,14 @@ using Newtonsoft.Json.Serialization;
 
 namespace GZipTest
 {
-    class Archivator
+    public class Archivator
     {
-        const int partSize = 1048576;
+        const int partSize = 1048576; //5242880;
+
+        static object locker = new object();
+
+        internal static int threadsCount;
+
         int part = 1;
         int headerSize { get { return FileHeaderHandler.HEADER_SIZE; } }
         private static Archivator archivator;
@@ -28,16 +33,17 @@ namespace GZipTest
             return archivator;
         }
 
-        public void CompressFile(FileInfo processingFile, FileInfo resultFile)
+        public void CompressFile(FileInfo sourceFile, FileInfo resultArchive)
         {
+            threadsCount = 0;
             OutputStreamQueuer outputStreamQueuer = OutputStreamQueuer.GetInstance();
-            outputStreamQueuer.outputFile = resultFile;
+            outputStreamQueuer.outputFile = resultArchive;
             Thread compressThread = new Thread(new ThreadStart(outputStreamQueuer.WriteStreamBytesToFile));
             compressThread.Start();
 
-            for (long offset = 0; offset < processingFile.Length; offset += partSize)
+            for (long offset = 0; offset < sourceFile.Length; offset += partSize)
             {
-                CompressionQueuer headeredFilePreparer = new CompressionQueuer(processingFile, offset, part);
+                CompressionQueuer headeredFilePreparer = new CompressionQueuer(sourceFile, offset, part);
                 Thread headerThread = new Thread(new ThreadStart(headeredFilePreparer.PrepareHeaderedFile));
                 headerThread.Name = $"Thread_{part++}";
                 headerThread.Start();
@@ -64,6 +70,26 @@ namespace GZipTest
                     fileRestorer.PutFileBytes(currentHeader.blockNum, decompressedBytes, currentHeader.isEndOfFile);
                 }
             }
+        }
+
+        internal static void IncreaseThreadCount()
+        {
+            lock (locker)
+            {
+                threadsCount++;
+            }
+
+            Console.WriteLine($"\r{threadsCount} threads are working.");
+        }
+
+        internal static void DecreaseThreadCount()
+        {
+            lock (locker)
+            {
+                threadsCount--;
+            }
+
+            Console.WriteLine($"\r{threadsCount} threads are working.");
         }
     }
 }

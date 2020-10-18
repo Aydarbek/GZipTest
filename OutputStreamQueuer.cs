@@ -48,7 +48,7 @@ namespace GZipTest
                         FileHeader fileHeader = new FileHeader(nextBlock.blockNum, nextBlock.blockData.Length, nextBlock.isEndOfFile);
                         FileHeaderHandler.WriteFileHeader(outputFileStream, fileHeader);
 
-                        Console.WriteLine($"Writing block {nextBlock.blockNum}.         {DateTime.Now.ToString("HH:mm:ss.fff")}");
+                        //Console.Write($"\rWriting block {nextBlock.blockNum}.         {DateTime.Now.ToString("HH:mm:ss.fff")}");
                         outputFileStream.Write(nextBlock.blockData, 0, nextBlock.blockData.Length);
                         outputFileStream.Flush();
                     }
@@ -57,11 +57,11 @@ namespace GZipTest
                     {
                         if (isEndOfFile)
                         {
-                            Console.WriteLine("Finish compressing.");
+                            //Console.WriteLine("\rFinish compressing.");
                             break;
                         }
 
-                        Console.WriteLine("Waiting for input bytes");
+                        //Console.WriteLine("\rWaiting for input bytes");
                         Thread.Sleep(100);
                     }
                 }

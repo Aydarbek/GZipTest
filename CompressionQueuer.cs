@@ -11,7 +11,7 @@ namespace GZipTest
 {
     class CompressionQueuer
     {
-        const int partSize = 1048576;
+        const int partSize = 1048576; //5242880; 
         static ReaderWriterLock locker = new ReaderWriterLock();
 
         FileInfo processingFile;
@@ -31,7 +31,8 @@ namespace GZipTest
         {
             try
             {
-                Console.WriteLine($"{Thread.CurrentThread.Name} start.          {DateTime.Now.ToString("HH:mm:ss.fff")}");
+                //Console.Write($"\r{Thread.CurrentThread.Name} start.          {DateTime.Now.ToString("HH:mm:ss.fff")}");
+                Archivator.IncreaseThreadCount();
 
                 byte[] bytes = new byte[Math.Min(partSize, processingFile.Length - offset)];
                 bool isEndOfFile = bytes.Length < partSize ? true : false;
@@ -47,7 +48,9 @@ namespace GZipTest
                     OutputStreamQueuer.GetInstance().WriteBytesToQueue(part, zipBytes, isEndOfFile);
                 }
 
-                Console.WriteLine($"{Thread.CurrentThread.Name} finished.       {DateTime.Now.ToString("HH:mm:ss.fff")}");
+                Archivator.DecreaseThreadCount();
+
+                //Console.Write($"\r{Thread.CurrentThread.Name} finished.       {DateTime.Now.ToString("HH:mm:ss.fff")}");
             }
             catch (Exception)
             {
