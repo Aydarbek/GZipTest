@@ -19,7 +19,7 @@ namespace GZipUnitTests
             FileInfo resultArchive = new FileInfo(projectDirectory + @"\Files\postgresql-11.gzt");
 
             Archivator.GetInstance().CompressFile(sourceFile, resultArchive);
-            Thread.Sleep(5000);
+            Thread.Sleep(2000);
 
             Assert.True(resultArchive.Exists);
             Assert.Equal(7631223, resultArchive.Length);

@@ -10,14 +10,15 @@ namespace GZipTest
 {
     class FileReader
     {
-        const long partSize = 1048576;
+        const long partSize = 5242880;
 
         static ReaderWriterLock rwl = new ReaderWriterLock();
         static object locker = new object();
         internal FileInfo sourceFile { get; set; }
-        private long offset = 0;
+        private long offset;
+        int blockNum;
+        
         private static FileReader fileReader;
-        int blockNum = 0;
 
         private FileReader() {}
 
@@ -31,34 +32,39 @@ namespace GZipTest
 
         internal FileBlock ReadNextBlock()
         {
+            byte[] block;
             lock (locker)
             {
                 using (FileStream sourceFileStream = sourceFile.OpenRead())
                 {
                     rwl.AcquireReaderLock(int.MaxValue);
 
-                    if (offset != sourceFileStream.Length)
-                        blockNum++;
-
-                    byte[] block = new byte[Math.Min(partSize, sourceFileStream.Length - offset)];
-
-                    float progress = (float)offset / (float)sourceFileStream.Length * 100;
-
-                    Console.Write($"\rReaded {offset / 1024}/{sourceFileStream.Length / 1024} Kbytes ({progress:0.0}%)");
+                    block = new byte[Math.Min(partSize, sourceFileStream.Length - offset)];
 
 
                     sourceFileStream.Seek(offset, SeekOrigin.Begin);
-                    sourceFileStream.Read(block, 0, block.Length);
+
+                    if (sourceFileStream.Position == sourceFileStream.Length)
+                        return new NullFileBlock();
 
                     offset += block.Length;
+                    sourceFileStream.Read(block, 0, block.Length);
 
-                    bool isEndOfFile = offset == sourceFileStream.Length ? true : false;
+                    bool isEndOfFile = offset == sourceFileStream.Length;
 
                     rwl.ReleaseReaderLock();
+                    ShowCurrentStatus();
 
-                    return new FileBlock(blockNum, block, isEndOfFile);
-                } 
+                    return new FileBlock(++blockNum, block, isEndOfFile);
+
+                }
             }
+        }
+
+        private void ShowCurrentStatus()
+        {
+            float progress = (float)offset / (float)sourceFile.Length * 100;
+            Console.Write($"\rProcessed {offset / 1024}/{sourceFile.Length / 1024} Kbytes ({progress:0.0}%)");
         }
     }
 }

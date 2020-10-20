@@ -18,8 +18,6 @@ namespace GZipTest
 
         private static ZipReader zipReader;
 
-
-
         private ZipReader() { }
 
         internal static ZipReader GetInstance()
@@ -40,7 +38,7 @@ namespace GZipTest
                     sourceZipFileStream.Seek(offset, SeekOrigin.Begin);
 
                     if (sourceZipFileStream.Position == sourceZipFileStream.Length)
-                        return new FileBlock(-1, new byte[0], true);
+                        return new NullFileBlock();
 
                     currentHeader = FileHeaderHandler.ReadFileHeader(sourceZipFileStream);
                     byte[] zipBytes = new byte[currentHeader.blockSize];
@@ -48,11 +46,19 @@ namespace GZipTest
 
                     offset += FileHeaderHandler.HEADER_SIZE + currentHeader.blockSize;
 
+                    ShowCurrentStatus();
+
                     rwl.ReleaseReaderLock();
 
                     return new FileBlock(currentHeader.blockNum, zipBytes, currentHeader.isEndOfFile);
                 }
             }
+        }
+
+        private void ShowCurrentStatus()
+        {
+            float progress = (float)offset / (float)sourceZipFile.Length * 100;
+            Console.Write($"\rDecompressed {offset / 1024}/{sourceZipFile.Length / 1024} Kbytes ({progress:0.0}%)");
         }
     }
 }

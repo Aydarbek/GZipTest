@@ -13,12 +13,16 @@ namespace GZipTest
 {
     public class Archivator
     {
-        static object locker = new object();
+        DateTime startTime;
 
-        internal static int threadsCount = 0;
+        FileReader fileReader = FileReader.GetInstance();
+        ZipReader zipReader = ZipReader.GetInstance();
 
-        int headerSize { get { return FileHeaderHandler.HEADER_SIZE; } }
+        CompressionQueuer outputStreamQueuer = CompressionQueuer.GetInstance();
+        DecompressionQueuer decompressionQueuer = DecompressionQueuer.GetInstance();
+
         private static Archivator archivator;
+
 
         private Archivator() { }
 
@@ -32,67 +36,88 @@ namespace GZipTest
 
         public void CompressFile(FileInfo sourceFile, FileInfo resultArchive)
         {
+            startTime = DateTime.Now;
+
             StartOutputStreamQueuer(resultArchive);
 
-            FileReader.GetInstance().sourceFile = sourceFile;
+            fileReader.sourceFile = sourceFile;
 
             for (int i = 1; i <= 10; i++)
             {
-                CompressionQueuer compressionQueuer = new CompressionQueuer();
-                Thread blocksProcessingThread = new Thread(new ThreadStart(compressionQueuer.PrepareCompressedBlock));
-                blocksProcessingThread.Name = $"Thread_{i}";
+                Thread blocksProcessingThread = new Thread(new ThreadStart(PrepareCompressedBlocks));
                 blocksProcessingThread.Start();
             }
         }
 
         private void StartOutputStreamQueuer(FileInfo resultArchive)
         {
-            OutputStreamQueuer outputStreamQueuer = OutputStreamQueuer.GetInstance();
             outputStreamQueuer.outputFile = resultArchive;
             Thread compressThread = new Thread(new ThreadStart(outputStreamQueuer.WriteStreamBytesToFile));
             compressThread.Start();
         }
 
-        public void DecompressFile(FileInfo fileToRestore, FileInfo resultFile)
+        private void PrepareCompressedBlocks()
         {
-            FileHeader currentHeader;
+            FileBlock block;
+            byte[] zipBytes;
 
-            using (FileStream fileToRestoreStream = fileToRestore.OpenRead())
+            while (true)
             {
-                DecompressionQueuer fileRestorer = new DecompressionQueuer(resultFile);
-                Thread fileRestoreThread = new Thread(new ThreadStart(fileRestorer.WriteFileBytesToStream));
-                fileRestoreThread.Start();
+                block = fileReader.ReadNextBlock();
 
-                while (fileToRestoreStream.Position < fileToRestoreStream.Length)
-                {
-                    currentHeader = FileHeaderHandler.ReadFileHeader(fileToRestoreStream);
-                    byte[] fileBytes = new byte[currentHeader.blockSize];
-                    fileToRestoreStream.Read(fileBytes, 0, fileBytes.Length);
+                if (block.isNull)
+                    break;
 
-                    byte[] decompressedBytes = GZipArchiver.Decompress(fileBytes);
-                    fileRestorer.PutFileBytes(currentHeader.blockNum, decompressedBytes, currentHeader.isEndOfFile);
-                }
+                zipBytes = GZipArchiver.Compress(block.blockData);
+                CompressionQueuer.GetInstance().WriteBytesToQueue(block.blockNum, zipBytes, block.isEndOfFile);
             }
         }
 
-        //internal static void IncreaseThreadCount()
-        //{
-        //    lock (locker)
-        //    {
-        //        threadsCount++;
-        //    }
+        internal void ShowTimeResult()
+        {
+            TimeSpan elapsedTime = DateTime.Now - startTime;
+            Console.WriteLine($"\nFile compressed in {elapsedTime.TotalSeconds:0.0} seconds");
+        }
 
-        //    Console.WriteLine($"\r{threadsCount} threads are working.");
-        //}
+        public void DecompressFile(FileInfo fileToRestore, FileInfo resultFile)
+        {
+            try
+            {
+                StartDecompressionQueuer(resultFile);
 
-        //internal static void DecreaseThreadCount()
-        //{
-        //    lock (locker)
-        //    {
-        //        threadsCount--;
-        //    }
+                zipReader.sourceZipFile = fileToRestore;
 
-        //    Console.WriteLine($"\r{threadsCount} threads are working.");
-        //}
+                for (int i = 1; i <= 10; i++)
+                {
+                    Thread readZipThread = new Thread(new ThreadStart(PrepareDecompressedBlocks));
+                    readZipThread.Start();
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        private void StartDecompressionQueuer(FileInfo resultFile)
+        {
+            decompressionQueuer.resultFile = resultFile;
+            Thread fileRestoreThread = new Thread(new ThreadStart(decompressionQueuer.WriteFileBytesToStream));
+            fileRestoreThread.Start();
+        }
+
+        private void PrepareDecompressedBlocks()
+        {
+            while (true)
+            {
+                FileBlock fileBlock = zipReader.ReadNextBlock();
+
+                if (fileBlock.isNull)
+                    break;
+
+                byte[] decompressedBytes = GZipArchiver.Decompress(fileBlock.blockData);
+                decompressionQueuer.PutFileBytes(fileBlock.blockNum, decompressedBytes, fileBlock.isEndOfFile);
+            }
+        }
     }
 }

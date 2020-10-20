@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -11,23 +11,57 @@ namespace GZipTest
 {
     class CompressionQueuer
     {
-        FileReader fileReader = FileReader.GetInstance();
-        FileBlock block;
-        byte[] zipBytes;
+        ConcurrentQueue<FileBlock> streamQueue = new ConcurrentQueue<FileBlock>();
+        internal FileInfo outputFile { get; set; }
+        bool isEndOfFile;
+        private static CompressionQueuer compressionQueuer;
 
-        internal void PrepareCompressedBlock()
+        private CompressionQueuer()  {}
+
+        internal static CompressionQueuer GetInstance()
         {
-            while (true)
+            if (compressionQueuer == null)
+                compressionQueuer = new CompressionQueuer();
+
+            return compressionQueuer;
+        }
+
+        internal void WriteBytesToQueue(int blockNum, byte[] inputBytes, bool isEndOfFile)
+        {
+            streamQueue.Enqueue(new FileBlock(blockNum, inputBytes, isEndOfFile));
+            
+            if (isEndOfFile)
+                this.isEndOfFile = true;
+        }
+
+        internal void WriteStreamBytesToFile()
+        {
+            using (FileStream outputFileStream = outputFile.Create())
             {
-                block = fileReader.ReadNextBlock();
+                while (true)
+                {
+                    if (!streamQueue.IsEmpty)
+                    {
+                        FileBlock nextBlock;
+                        streamQueue.TryDequeue(out nextBlock);
 
-                if(block.blockData.Length == 0)
-                    break;
+                        FileHeader fileHeader = new FileHeader(nextBlock.blockNum, nextBlock.blockData.Length, nextBlock.isEndOfFile);
+                        FileHeaderHandler.WriteFileHeader(outputFileStream, fileHeader);
+                                                
+                        outputFileStream.Write(nextBlock.blockData, 0, nextBlock.blockData.Length);
+                    }
 
-                FileHeader fileHeader = new FileHeader(block.blockNum, block.blockData.Length, block.isEndOfFile);
+                    else
+                    {
+                        if (isEndOfFile)
+                        {
+                            Archivator.GetInstance().ShowTimeResult();
+                            break;
+                        }
 
-                zipBytes = GZipArchiver.Compress(block.blockData);
-                OutputStreamQueuer.GetInstance().WriteBytesToQueue(block.blockNum, zipBytes, block.isEndOfFile);
+                        Thread.Sleep(100);
+                    }
+                }
             }
         }
     }
