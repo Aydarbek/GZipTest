@@ -18,7 +18,7 @@ namespace GZipTest
         FileReader fileReader = FileReader.GetInstance();
         ZipReader zipReader = ZipReader.GetInstance();
 
-        CompressionQueuer outputStreamQueuer = CompressionQueuer.GetInstance();
+        CompressionQueuer compressionQueuer = CompressionQueuer.GetInstance();
         DecompressionQueuer decompressionQueuer = DecompressionQueuer.GetInstance();
 
         private static Archivator archivator;
@@ -51,8 +51,8 @@ namespace GZipTest
 
         private void StartOutputStreamQueuer(FileInfo resultArchive)
         {
-            outputStreamQueuer.outputFile = resultArchive;
-            Thread compressThread = new Thread(new ThreadStart(outputStreamQueuer.WriteStreamBytesToFile));
+            compressionQueuer.outputFile = resultArchive;
+            Thread compressThread = new Thread(new ThreadStart(compressionQueuer.WriteStreamBytesToFile));
             compressThread.Start();
         }
 
@@ -69,7 +69,7 @@ namespace GZipTest
                     break;
 
                 zipBytes = GZipArchiver.Compress(block.blockData);
-                CompressionQueuer.GetInstance().WriteBytesToQueue(block.blockNum, zipBytes, block.isEndOfFile);
+                compressionQueuer.WriteBytesToQueue(block.blockNum, zipBytes, block.isEndOfFile);
             }
         }
 
@@ -87,7 +87,7 @@ namespace GZipTest
 
                 zipReader.sourceZipFile = fileToRestore;
 
-                for (int i = 1; i <= 10; i++)
+                for (int i = 1; i <= 1; i++)
                 {
                     Thread readZipThread = new Thread(new ThreadStart(PrepareDecompressedBlocks));
                     readZipThread.Start();

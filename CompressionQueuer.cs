@@ -55,8 +55,13 @@ namespace GZipTest
                     {
                         if (isEndOfFile)
                         {
-                            Archivator.GetInstance().ShowTimeResult();
-                            break;
+                            Thread.Sleep(1000);
+
+                            if (streamQueue.IsEmpty)
+                            {
+                                Archivator.GetInstance().ShowTimeResult();
+                                break;
+                            }
                         }
 
                         Thread.Sleep(100);

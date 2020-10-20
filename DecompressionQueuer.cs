@@ -52,6 +52,7 @@ namespace GZipTest
                         resultFileStream.Write(currentWaitingStream, 0, currentWaitingStream.Length);
                         fileStreams.TryRemove(currentWaitingBlock, out currentWaitingStream);
                         currentWaitingBlock++;
+                        waitCounter = 0;
                     }
 
                     else
@@ -61,7 +62,6 @@ namespace GZipTest
                             Console.WriteLine("\nFile has been decompressed.");
                             break;
                         }
-
                         
                         Thread.Sleep(100);
                         waitCounter++;

@@ -10,7 +10,7 @@ namespace GZipTest
 {
     class FileReader
     {
-        const long partSize = 5242880;
+        const long partSize = 104857600; //5242880;
 
         static ReaderWriterLock rwl = new ReaderWriterLock();
         static object locker = new object();
@@ -56,7 +56,6 @@ namespace GZipTest
                     ShowCurrentStatus();
 
                     return new FileBlock(++blockNum, block, isEndOfFile);
-
                 }
             }
         }
