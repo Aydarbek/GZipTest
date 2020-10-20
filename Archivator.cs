@@ -13,13 +13,10 @@ namespace GZipTest
 {
     public class Archivator
     {
-        const int partSize = 1048576; //5242880;
-
         static object locker = new object();
 
-        internal static int threadsCount;
+        internal static int threadsCount = 0;
 
-        int part = 1;
         int headerSize { get { return FileHeaderHandler.HEADER_SIZE; } }
         private static Archivator archivator;
 
@@ -35,19 +32,25 @@ namespace GZipTest
 
         public void CompressFile(FileInfo sourceFile, FileInfo resultArchive)
         {
-            threadsCount = 0;
+            StartOutputStreamQueuer(resultArchive);
+
+            FileReader.GetInstance().sourceFile = sourceFile;
+
+            for (int i = 1; i <= 10; i++)
+            {
+                CompressionQueuer compressionQueuer = new CompressionQueuer();
+                Thread blocksProcessingThread = new Thread(new ThreadStart(compressionQueuer.PrepareCompressedBlock));
+                blocksProcessingThread.Name = $"Thread_{i}";
+                blocksProcessingThread.Start();
+            }
+        }
+
+        private void StartOutputStreamQueuer(FileInfo resultArchive)
+        {
             OutputStreamQueuer outputStreamQueuer = OutputStreamQueuer.GetInstance();
             outputStreamQueuer.outputFile = resultArchive;
             Thread compressThread = new Thread(new ThreadStart(outputStreamQueuer.WriteStreamBytesToFile));
             compressThread.Start();
-
-            for (long offset = 0; offset < sourceFile.Length; offset += partSize)
-            {
-                CompressionQueuer headeredFilePreparer = new CompressionQueuer(sourceFile, offset, part);
-                Thread headerThread = new Thread(new ThreadStart(headeredFilePreparer.PrepareHeaderedFile));
-                headerThread.Name = $"Thread_{part++}";
-                headerThread.Start();
-            }
         }
 
         public void DecompressFile(FileInfo fileToRestore, FileInfo resultFile)
@@ -72,24 +75,24 @@ namespace GZipTest
             }
         }
 
-        internal static void IncreaseThreadCount()
-        {
-            lock (locker)
-            {
-                threadsCount++;
-            }
+        //internal static void IncreaseThreadCount()
+        //{
+        //    lock (locker)
+        //    {
+        //        threadsCount++;
+        //    }
 
-            Console.WriteLine($"\r{threadsCount} threads are working.");
-        }
+        //    Console.WriteLine($"\r{threadsCount} threads are working.");
+        //}
 
-        internal static void DecreaseThreadCount()
-        {
-            lock (locker)
-            {
-                threadsCount--;
-            }
+        //internal static void DecreaseThreadCount()
+        //{
+        //    lock (locker)
+        //    {
+        //        threadsCount--;
+        //    }
 
-            Console.WriteLine($"\r{threadsCount} threads are working.");
-        }
+        //    Console.WriteLine($"\r{threadsCount} threads are working.");
+        //}
     }
 }

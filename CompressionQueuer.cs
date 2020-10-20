@@ -11,52 +11,24 @@ namespace GZipTest
 {
     class CompressionQueuer
     {
-        const int partSize = 1048576; //5242880; 
-        static ReaderWriterLock locker = new ReaderWriterLock();
+        FileReader fileReader = FileReader.GetInstance();
+        FileBlock block;
+        byte[] zipBytes;
 
-        FileInfo processingFile;
-        long offset;
-        int part;
-
-        int headerSize { get { return FileHeaderHandler.HEADER_SIZE; } }
-
-        public CompressionQueuer(FileInfo processingFile, long offset, int part)
+        internal void PrepareCompressedBlock()
         {
-            this.processingFile = processingFile;
-            this.offset = offset;
-            this.part = part;
-        }
-
-        internal void PrepareHeaderedFile()
-        {
-            try
+            while (true)
             {
-                //Console.Write($"\r{Thread.CurrentThread.Name} start.          {DateTime.Now.ToString("HH:mm:ss.fff")}");
-                Archivator.IncreaseThreadCount();
+                block = fileReader.ReadNextBlock();
 
-                byte[] bytes = new byte[Math.Min(partSize, processingFile.Length - offset)];
-                bool isEndOfFile = bytes.Length < partSize ? true : false;
+                if(block.blockData.Length == 0)
+                    break;
 
-                FileHeader fileHeader = new FileHeader(part, bytes.Length, isEndOfFile);
+                FileHeader fileHeader = new FileHeader(block.blockNum, block.blockData.Length, block.isEndOfFile);
 
-                using (FileStream fileToProcessStream = processingFile.OpenRead())
-                {
-                    fileToProcessStream.Seek(offset, SeekOrigin.Begin);
-                    fileToProcessStream.Read(bytes, 0, bytes.Length);
-
-                    byte[] zipBytes = GZipArchiver.Compress(bytes);
-                    OutputStreamQueuer.GetInstance().WriteBytesToQueue(part, zipBytes, isEndOfFile);
-                }
-
-                Archivator.DecreaseThreadCount();
-
-                //Console.Write($"\r{Thread.CurrentThread.Name} finished.       {DateTime.Now.ToString("HH:mm:ss.fff")}");
+                zipBytes = GZipArchiver.Compress(block.blockData);
+                OutputStreamQueuer.GetInstance().WriteBytesToQueue(block.blockNum, zipBytes, block.isEndOfFile);
             }
-            catch (Exception)
-            {
-                throw;
-            }
-
         }
     }
 }

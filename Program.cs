@@ -15,6 +15,8 @@ namespace GZipTest
         {
             try
             {
+                //Archivator.GetInstance().CompressFile(new FileInfo("Europe.log"), new FileInfo("result.gzt"));
+
                 ValidateInput(args);
 
                 if ("compress".Equals(args[0]))
@@ -22,11 +24,14 @@ namespace GZipTest
                 else if ("decompress".Equals(args[0]))
                     Archivator.GetInstance().DecompressFile(new FileInfo(args[1]), new FileInfo(args[2]));
 
+                Console.Read();
+
                 return 0;
         }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine(e.Message + "\n" + e.StackTrace);
+                Console.Read();
                 return 1;
             }
         }
