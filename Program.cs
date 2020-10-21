@@ -20,10 +20,7 @@ namespace GZipTest
 
                 ValidateInput(args);
 
-                if ("compress".Equals(args[0]))
-                    Archivator.GetInstance().CompressFile(new FileInfo(args[1]), new FileInfo(args[2]));
-                else if ("decompress".Equals(args[0]))
-                    Archivator.GetInstance().DecompressFile(new FileInfo(args[1]), new FileInfo(args[2]));
+                Archivator.GetInstance().ProcessFile(args[0], new FileInfo(args[1]), new FileInfo(args[2]));
 
                 return 0;
         }

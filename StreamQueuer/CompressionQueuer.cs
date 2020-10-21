@@ -16,17 +16,6 @@ namespace GZipTest
         FileBlock nextBlock;
         FileHeader fileHeader;
         bool isEndOfFile;
-        private static CompressionQueuer compressionQueuer;
-
-        private CompressionQueuer()  {}
-
-        internal static CompressionQueuer GetInstance()
-        {
-            if (compressionQueuer == null)
-                compressionQueuer = new CompressionQueuer();
-
-            return compressionQueuer;
-        }
 
         public void PutBytesToQueue(int blockNum, byte[] bytes, bool isEndOfFile)
         {

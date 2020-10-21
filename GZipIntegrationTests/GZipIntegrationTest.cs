@@ -18,7 +18,7 @@ namespace GZipUnitTests
             FileInfo sourceFile = new FileInfo(projectDirectory + @"\Files\postgresql-11.pdf");
             FileInfo resultArchive = new FileInfo(projectDirectory + @"\Files\postgresql-11.gzt");
 
-            Archivator.GetInstance().CompressFile(sourceFile, resultArchive);
+            Archivator.GetInstance().ProcessFile("compress", sourceFile, resultArchive);
             Thread.Sleep(2000);
 
             Assert.True(resultArchive.Exists);
@@ -31,7 +31,7 @@ namespace GZipUnitTests
             FileInfo sourceArchive = new FileInfo(projectDirectory + @"\Files\kombinatorika.gzt");
             FileInfo resultFile = new FileInfo(projectDirectory + @"\Files\kombinatorika.pdf");
 
-            Archivator.GetInstance().DecompressFile(sourceArchive, resultFile);
+            Archivator.GetInstance().ProcessFile("decompress", sourceArchive, resultFile);
             Thread.Sleep(1000);
 
             Assert.True(resultFile.Exists);

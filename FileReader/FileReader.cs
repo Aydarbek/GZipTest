@@ -17,18 +17,6 @@ namespace GZipTest
         long offset;
         int blockNum;
         
-        private static FileReader fileReader;
-
-        private FileReader() {}
-
-        internal static FileReader GetInstance()
-        {
-            if (fileReader == null)
-                fileReader = new FileReader();
-
-            return fileReader;
-        }
-
         public FileBlock ReadNextBlock()
         {
             try

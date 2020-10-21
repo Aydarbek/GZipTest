@@ -18,16 +18,6 @@ namespace GZipTest
         byte[] currentWaitingStream;
         int waitCounter = 0;
 
-        private static DecompressionQueuer decompressionQueuer;
-        private DecompressionQueuer()  {}
-        internal static DecompressionQueuer GetInstance()
-        {
-            if (decompressionQueuer == null)
-                decompressionQueuer = new DecompressionQueuer();
-
-            return decompressionQueuer;
-        }
-
         public void PutBytesToQueue(int blockNum, byte[] bytes, bool isEndOfFile)
         {
             fileStreams.TryAdd(blockNum, bytes);

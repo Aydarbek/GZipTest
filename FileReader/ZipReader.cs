@@ -16,17 +16,6 @@ namespace GZipTest
         private long offset;
         FileHeader currentHeader;
 
-        private static ZipReader zipReader;
-
-        private ZipReader() { }
-
-        internal static ZipReader GetInstance()
-        {
-            if (zipReader == null)
-                zipReader = new ZipReader();
-
-            return zipReader;
-        }
 
         public FileBlock ReadNextBlock()
         {
