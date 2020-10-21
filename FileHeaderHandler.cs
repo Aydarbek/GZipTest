@@ -27,12 +27,19 @@ namespace GZipTest
 
         internal static FileHeader ReadFileHeader(FileStream stream)
         {
-            byte[] byteArray = new byte[HEADER_SIZE];
-            stream.Read(byteArray, 0, HEADER_SIZE);
+            try
+            {
+                byte[] byteArray = new byte[HEADER_SIZE];
+                stream.Read(byteArray, 0, HEADER_SIZE);
 
-            string fileHeaderString = Encoding.Default.GetString(byteArray).Trim();
+                string fileHeaderString = Encoding.Default.GetString(byteArray).Trim();
 
-            return JsonConvert.DeserializeObject<FileHeader>(fileHeaderString);
+                return JsonConvert.DeserializeObject<FileHeader>(fileHeaderString);
+            }
+            catch (JsonReaderException)
+            {
+                throw new GZipTestException("Archive file format is not GZipTest format");
+            }
         }
     }
 }

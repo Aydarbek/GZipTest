@@ -22,10 +22,7 @@ namespace GZipTest
         DecompressionQueuer decompressionQueuer = DecompressionQueuer.GetInstance();
 
         private static Archivator archivator;
-
-
         private Archivator() { }
-
         public static Archivator GetInstance()
         {
             if (archivator == null)
@@ -36,16 +33,26 @@ namespace GZipTest
 
         public void CompressFile(FileInfo sourceFile, FileInfo resultArchive)
         {
-            startTime = DateTime.Now;
-
-            StartOutputStreamQueuer(resultArchive);
-
-            fileReader.sourceFile = sourceFile;
-
-            for (int i = 1; i <= 10; i++)
+            try
             {
-                Thread blocksProcessingThread = new Thread(new ThreadStart(PrepareCompressedBlocks));
-                blocksProcessingThread.Start();
+                if (!sourceFile.Exists)
+                    throw new FileNotFoundException($"Specified file not found: {sourceFile.FullName}");
+                
+                startTime = DateTime.Now;
+
+                StartOutputStreamQueuer(resultArchive);
+
+                fileReader.sourceFile = sourceFile;
+
+                for (int i = 1; i <= 10; i++)
+                {
+                    Thread blocksProcessingThread = new Thread(new ThreadStart(PrepareCompressedBlocks));
+                    blocksProcessingThread.Start();
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
             }
         }
 
@@ -70,7 +77,7 @@ namespace GZipTest
 
                 zipBytes = GZipArchiver.Compress(block.blockData);
                 compressionQueuer.WriteBytesToQueue(block.blockNum, zipBytes, block.isEndOfFile);
-            }
+            }           
         }
 
         internal void ShowTimeResult()
@@ -83,19 +90,31 @@ namespace GZipTest
         {
             try
             {
-                StartDecompressionQueuer(resultFile);
+                if (!fileToRestore.Exists)
+                    throw new FileNotFoundException($"Specified file not found: {fileToRestore.FullName}");
 
+                ValidateFileFormat(fileToRestore);
+
+                StartDecompressionQueuer(resultFile);
                 zipReader.sourceZipFile = fileToRestore;
 
-                for (int i = 1; i <= 1; i++)
+                for (int i = 1; i <= 5; i++)
                 {
                     Thread readZipThread = new Thread(new ThreadStart(PrepareDecompressedBlocks));
                     readZipThread.Start();
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                throw;
+                Console.WriteLine(e.Message);
+            }
+        }
+
+        private void ValidateFileFormat(FileInfo fileToRestore)
+        {
+            using (FileStream fileStream = fileToRestore.OpenRead())
+            {
+                FileHeader fileHeader = FileHeaderHandler.ReadFileHeader(fileStream);
             }
         }
 

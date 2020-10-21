@@ -15,12 +15,12 @@ namespace GZipTest
         internal FileInfo resultFile { get; set; }
         bool isEndOfFile { get; set; }
         int currentWaitingBlock = 1;
+        byte[] currentWaitingStream;
+        int waitCounter = 0;
 
         private static DecompressionQueuer decompressionQueuer;
 
-        private DecompressionQueuer()
-        {            
-        }
+        private DecompressionQueuer()  {}
 
 
         internal static DecompressionQueuer GetInstance()
@@ -40,36 +40,46 @@ namespace GZipTest
 
         internal void WriteFileBytesToStream()
         {
-            int waitCounter = 0;
-
-            using (FileStream resultFileStream = resultFile.OpenWrite())
+            try
             {
-                while (true)
+                using (FileStream resultFileStream = resultFile.OpenWrite())
                 {
-                    byte[] currentWaitingStream;
-                    if (fileStreams.TryGetValue(currentWaitingBlock, out currentWaitingStream))
+                    while (true)
                     {
-                        resultFileStream.Write(currentWaitingStream, 0, currentWaitingStream.Length);
-                        fileStreams.TryRemove(currentWaitingBlock, out currentWaitingStream);
-                        currentWaitingBlock++;
-                        waitCounter = 0;
-                    }
 
-                    else
-                    {
-                        if (isEndOfFile && fileStreams.IsEmpty)
+                        if (fileStreams.TryGetValue(currentWaitingBlock, out currentWaitingStream))
                         {
-                            Console.WriteLine("\nFile has been decompressed.");
-                            break;
+                            resultFileStream.Write(currentWaitingStream, 0, currentWaitingStream.Length);
+                            fileStreams.TryRemove(currentWaitingBlock, out currentWaitingStream);
+                            currentWaitingBlock++;
+                            waitCounter = 0;
                         }
-                        
-                        Thread.Sleep(100);
-                        waitCounter++;
 
-                        if (waitCounter > 300)
-                            throw new GZipTestException($"Decompress file error! Next required block (no. {currentWaitingBlock}) not found.");
+                        else
+                        {
+                            if (isEndOfFile && fileStreams.IsEmpty)
+                            {
+                                Console.WriteLine("\nFile has been decompressed.");
+                                break;
+                            }
+
+                            Thread.Sleep(100);
+                            waitCounter++;
+
+                            if (waitCounter > 300)
+                                throw new GZipTestException($"Decompress file error! Next required block (no. {currentWaitingBlock}) not found.");
+                        }
                     }
-                } 
+                }
+            }
+            catch (GZipTestException e)
+            {
+                Console.WriteLine($"\n{e.Message}");
+            }
+
+            catch(Exception e)
+            {
+                Console.WriteLine($"\nEnexpected error! Stacktrace:\n{e.StackTrace}");
             }
         }
     }
