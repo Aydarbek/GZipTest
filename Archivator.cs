@@ -15,11 +15,9 @@ namespace GZipTest
     {
         DateTime startTime;
 
-        FileReader fileReader = FileReader.GetInstance();
-        ZipReader zipReader = ZipReader.GetInstance();
-
-        CompressionQueuer compressionQueuer = CompressionQueuer.GetInstance();
-        DecompressionQueuer decompressionQueuer = DecompressionQueuer.GetInstance();
+        IFileReader fileReader;
+        IStreamQueuer streamQueuer;
+                
 
         private static Archivator archivator;
         private Archivator() { }
@@ -33,6 +31,9 @@ namespace GZipTest
 
         public void CompressFile(FileInfo sourceFile, FileInfo resultArchive)
         {
+            fileReader = FileReader.GetInstance();
+            streamQueuer = CompressionQueuer.GetInstance();
+
             try
             {
                 if (!sourceFile.Exists)
@@ -53,13 +54,16 @@ namespace GZipTest
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+
+                if (resultArchive.Exists)
+                    resultArchive.Delete();
             }
         }
 
         private void StartOutputStreamQueuer(FileInfo resultArchive)
         {
-            compressionQueuer.outputFile = resultArchive;
-            Thread compressThread = new Thread(new ThreadStart(compressionQueuer.WriteStreamBytesToFile));
+            streamQueuer.outputFile = resultArchive;
+            Thread compressThread = new Thread(new ThreadStart(streamQueuer.WriteBytesToFile));
             compressThread.Start();
         }
 
@@ -75,8 +79,8 @@ namespace GZipTest
                 if (block.isNull)
                     break;
 
-                zipBytes = GZipArchiver.Compress(block.blockData);
-                compressionQueuer.WriteBytesToQueue(block.blockNum, zipBytes, block.isEndOfFile);
+                zipBytes = GZipHelper.Compress(block.blockData);
+                streamQueuer.PutBytesToQueue(block.blockNum, zipBytes, block.isEndOfFile);
             }           
         }
 
@@ -88,6 +92,9 @@ namespace GZipTest
 
         public void DecompressFile(FileInfo fileToRestore, FileInfo resultFile)
         {
+            fileReader = ZipReader.GetInstance();
+            streamQueuer = DecompressionQueuer.GetInstance();
+
             try
             {
                 if (!fileToRestore.Exists)
@@ -96,7 +103,7 @@ namespace GZipTest
                 ValidateFileFormat(fileToRestore);
 
                 StartDecompressionQueuer(resultFile);
-                zipReader.sourceZipFile = fileToRestore;
+                fileReader.sourceFile = fileToRestore;
 
                 for (int i = 1; i <= 5; i++)
                 {
@@ -120,8 +127,8 @@ namespace GZipTest
 
         private void StartDecompressionQueuer(FileInfo resultFile)
         {
-            decompressionQueuer.resultFile = resultFile;
-            Thread fileRestoreThread = new Thread(new ThreadStart(decompressionQueuer.WriteFileBytesToStream));
+            streamQueuer.outputFile = resultFile;
+            Thread fileRestoreThread = new Thread(new ThreadStart(streamQueuer.WriteBytesToFile));
             fileRestoreThread.Start();
         }
 
@@ -129,13 +136,13 @@ namespace GZipTest
         {
             while (true)
             {
-                FileBlock fileBlock = zipReader.ReadNextBlock();
+                FileBlock fileBlock = fileReader.ReadNextBlock();
 
                 if (fileBlock.isNull)
                     break;
 
-                byte[] decompressedBytes = GZipArchiver.Decompress(fileBlock.blockData);
-                decompressionQueuer.PutFileBytes(fileBlock.blockNum, decompressedBytes, fileBlock.isEndOfFile);
+                byte[] decompressedBytes = GZipHelper.Decompress(fileBlock.blockData);
+                streamQueuer.PutBytesToQueue(fileBlock.blockNum, decompressedBytes, fileBlock.isEndOfFile);
             }
         }
     }
