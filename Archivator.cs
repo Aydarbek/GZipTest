@@ -19,44 +19,31 @@ namespace GZipTest
         IFileReader fileReader;
         IStreamQueuer streamQueuer;
         IGZipProcessor gZipProcessor;
+        string operation;
 
-        private static Archivator archivator;
-        private Archivator() { }
-        public static Archivator GetInstance()
+        public Archivator(string operation)
         {
-            if (archivator == null)
-                archivator = new Archivator();
-
-            return archivator;
+            this.operation = operation;
         }
         
 
-        public void ProcessFile(string operation, FileInfo sourceFile, FileInfo resultFile)
+        public void ProcessFile(FileInfo sourceFile, FileInfo resultFile)
         {
-            GetArchivatorTools(operation);
+            startTime = DateTime.Now;
 
             try
             {
-                if (!sourceFile.Exists)
-                    throw new FileNotFoundException($"Specified file not found: {sourceFile.FullName}");
-                
-                startTime = DateTime.Now;
-
+                GetArchivatorTools(operation);
+                ValidateSourceFile(operation, sourceFile);
                 StartOutputStreamQueuer(resultFile);
-                fileReader.sourceFile = sourceFile;
-
-                for (int i = 1; i <= 5; i++)
-                {
-                    Thread blocksProcessingThread = new Thread(new ThreadStart(PrepareProcessedBlocks));
-                    blocksProcessingThread.Start();
-                }
+                StartFileProcessingThreads(sourceFile);
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Console.WriteLine(e.Message);
-
                 if (resultFile.Exists)
                     resultFile.Delete();
+
+                throw;
             }
         }
 
@@ -64,36 +51,30 @@ namespace GZipTest
         {
             fileReader = FileReaderFactory.GetFileReader(operation);
             streamQueuer = StreamQueuerFactory.GetStreamQueuer(operation);
+            streamQueuer.ShowResult = ShowOperationResult;
+
             gZipProcessor = GZipProcessorFactory.GetGZipProcessor(operation);
         }
 
+        private void StartFileProcessingThreads(FileInfo sourceFile)
+        {
+            fileReader.sourceFile = sourceFile;
 
-        //public void DecompressFile(FileInfo sourceFile, FileInfo resultFile)
-        //{
-        //    try
-        //    {
-        //        if (!sourceFile.Exists)
-        //            throw new FileNotFoundException($"Specified file not found: {sourceFile.FullName}");
+            for (int i = 1; i <= 5; i++)
+            {
+                Thread blocksProcessingThread = new Thread(new ThreadStart(PrepareProcessedBlocks));
+                blocksProcessingThread.Start();
+            }
+        }
 
-        //        //ValidateFileFormat(sourceFile);
+        private void ValidateSourceFile(string operation, FileInfo sourceFile)
+        {
+            if (!sourceFile.Exists)
+                throw new FileNotFoundException($"Specified file not found: {sourceFile.FullName}");
 
-        //        StartOutputStreamQueuer(resultFile);
-        //        fileReader.sourceFile = sourceFile;
-
-        //        for (int i = 1; i <= 5; i++)
-        //        {
-        //            Thread readZipThread = new Thread(new ThreadStart(PrepareProcessedBlocks));
-        //            readZipThread.Start();
-        //        }
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        Console.WriteLine(e.Message);
-
-        //        if (resultFile.Exists)
-        //            resultFile.Delete();
-        //    }
-        //}
+            if ("decompress".Equals(operation))
+                ValidateFileFormat(sourceFile);
+        }
 
         private void StartOutputStreamQueuer(FileInfo resultArchive)
         {
@@ -102,11 +83,10 @@ namespace GZipTest
             compressThread.Start();
         }
 
-
         private void PrepareProcessedBlocks()
         {
             FileBlock block;
-            byte[] zipBytes;
+            byte[] processedBytes;
 
             while (true)
             {
@@ -115,15 +95,15 @@ namespace GZipTest
                 if (block.isNull)
                     break;
 
-                zipBytes = gZipProcessor.ProcessBytes(block.blockData);
-                streamQueuer.PutBytesToQueue(block.blockNum, zipBytes, block.isEndOfFile);
+                processedBytes = gZipProcessor.ProcessBytes(block.blockData);
+                streamQueuer.PutBytesToQueue(block.blockNum, processedBytes, block.isEndOfFile);
             }           
         }
 
-        internal void ShowTimeResult()
+        internal void ShowOperationResult()
         {
             TimeSpan elapsedTime = DateTime.Now - startTime;
-            Console.WriteLine($"\nFile processed in {elapsedTime.TotalSeconds:0.0} seconds");
+            Console.WriteLine($"\nFile {operation}ed in {elapsedTime.TotalSeconds:0.0} seconds");
         }
 
 
@@ -134,6 +114,5 @@ namespace GZipTest
                 FileHeader fileHeader = FileHeaderHandler.ReadFileHeader(fileStream);
             }
         }
-
     }
 }

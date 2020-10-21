@@ -15,12 +15,9 @@ namespace GZipTest
         {
             try
             {
-                //Archivator.GetInstance().CompressFile(new FileInfo("Europe.log"), new FileInfo("result.gzt"));
-                //Archivator.GetInstance().DecompressFile(new FileInfo("result.gzt"), new FileInfo("Europe1.log"));
-
                 ValidateInput(args);
-
-                Archivator.GetInstance().ProcessFile(args[0], new FileInfo(args[1]), new FileInfo(args[2]));
+                Archivator archivator = new Archivator(args[0]);
+                archivator.ProcessFile(new FileInfo(args[1]), new FileInfo(args[2]));
 
                 return 0;
         }

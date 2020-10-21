@@ -15,10 +15,11 @@ namespace GZipUnitTests
         [Fact]
         public void CompressFileTest()
         {
+            Archivator archivator = new Archivator("compress");
             FileInfo sourceFile = new FileInfo(projectDirectory + @"\Files\postgresql-11.pdf");
             FileInfo resultArchive = new FileInfo(projectDirectory + @"\Files\postgresql-11.gzt");
 
-            Archivator.GetInstance().ProcessFile("compress", sourceFile, resultArchive);
+            archivator.ProcessFile(sourceFile, resultArchive);
             Thread.Sleep(2000);
 
             Assert.True(resultArchive.Exists);
@@ -28,10 +29,11 @@ namespace GZipUnitTests
         [Fact]
         public void DecompressFileTest()
         {
+            Archivator archivator = new Archivator("decompress");
             FileInfo sourceArchive = new FileInfo(projectDirectory + @"\Files\kombinatorika.gzt");
             FileInfo resultFile = new FileInfo(projectDirectory + @"\Files\kombinatorika.pdf");
 
-            Archivator.GetInstance().ProcessFile("decompress", sourceArchive, resultFile);
+            archivator.ProcessFile(sourceArchive, resultFile);
             Thread.Sleep(1000);
 
             Assert.True(resultFile.Exists);
