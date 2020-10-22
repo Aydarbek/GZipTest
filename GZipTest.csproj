@@ -48,7 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Entities\FileHeader.cs" />
-    <Compile Include="FileHeaderHandler.cs" />
+    <Compile Include="Helpers\FileHeaderHelper.cs" />
     <Compile Include="Archivator.cs" />
     <Compile Include="FileReaders\FileReaderFactory.cs" />
     <Compile Include="GZipProcessors\GZipDecompressor.cs" />
@@ -59,7 +59,7 @@
     <Compile Include="GZipProcessors\GZipCompressor.cs" />
     <Compile Include="Entities\NullFileBlock.cs" />
     <Compile Include="StreamQueuers\CompressionQueuer.cs" />
-    <Compile Include="GZipTestException.cs" />
+    <Compile Include="Exceptions\GZipTestException.cs" />
     <Compile Include="FileReaders\IFileReader.cs" />
     <Compile Include="StreamQueuers\IStreamQueuer.cs" />
     <Compile Include="Program.cs" />

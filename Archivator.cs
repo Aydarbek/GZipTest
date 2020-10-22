@@ -111,7 +111,7 @@ namespace GZipTest
         {
             using (FileStream fileStream = fileToRestore.OpenRead())
             {
-                FileHeader fileHeader = FileHeaderHandler.ReadFileHeader(fileStream);
+                FileHeader fileHeader = FileHeaderHelper.ReadFileHeader(fileStream);
             }
         }
     }

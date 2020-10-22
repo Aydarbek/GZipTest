@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace GZipTest
 {
-    class FileHeaderHandler
+    class FileHeaderHelper
     {
         internal const int HEADER_SIZE = 64;
 

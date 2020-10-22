@@ -37,7 +37,7 @@ namespace GZipTest
                         streamQueue.TryDequeue(out nextBlock);
 
                         fileHeader = new FileHeader(nextBlock.blockNum, nextBlock.blockData.Length, nextBlock.isEndOfFile);
-                        FileHeaderHandler.WriteFileHeader(outputFileStream, fileHeader);
+                        FileHeaderHelper.WriteFileHeader(outputFileStream, fileHeader);
 
                         outputFileStream.Write(nextBlock.blockData, 0, nextBlock.blockData.Length);
                     }

@@ -29,11 +29,11 @@ namespace GZipTest
                     if (sourceZipFileStream.Position == sourceZipFileStream.Length)
                         return new NullFileBlock();
 
-                    currentHeader = FileHeaderHandler.ReadFileHeader(sourceZipFileStream);
+                    currentHeader = FileHeaderHelper.ReadFileHeader(sourceZipFileStream);
                     byte[] zipBytes = new byte[currentHeader.blockSize];
                     sourceZipFileStream.Read(zipBytes, 0, zipBytes.Length);
 
-                    offset += FileHeaderHandler.HEADER_SIZE + currentHeader.blockSize;
+                    offset += FileHeaderHelper.HEADER_SIZE + currentHeader.blockSize;
 
                     ShowCurrentStatus();
 
