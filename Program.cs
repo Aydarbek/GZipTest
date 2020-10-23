@@ -23,17 +23,19 @@ namespace GZipTest
         }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine(e.Message);                
                 return 1;
             }
         }
 
         private static void ValidateInput(string [] args)
         {
-            if (args == null || 
+            if (args == null ||
                 args.Length < 3 ||
                 (!("compress".Equals(args[0])) && !("decompress".Equals(args[0]))))
-                    throw new ArgumentException(argumentExceptionText);
+                throw new ArgumentException(argumentExceptionText);
+            else if (args != null && args[1].Equals(args[2]))
+                throw new GZipTestException("Input and output files cannot be the same!");
         }
     }
 }

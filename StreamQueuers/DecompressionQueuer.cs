@@ -13,7 +13,6 @@ namespace GZipTest
     {
         ConcurrentDictionary<int, byte[]> fileStreams = new ConcurrentDictionary<int, byte[]>();
         public FileInfo outputFile { get; set; }
-        public Action ShowResult { get; set; }
 
         bool isEndOfFile { get; set; }
         int currentWaitingBlock = 1;
@@ -47,28 +46,21 @@ namespace GZipTest
                         else
                         {
                             if (isEndOfFile && fileStreams.IsEmpty)
-                            {
-                                ShowResult();
                                 break;
-                            }
 
                             Thread.Sleep(100);
                             waitCounter++;
 
                             if (waitCounter > 300)
-                                throw new GZipTestException($"Decompress file error! Next required block (no. {currentWaitingBlock}) not found.");
+                                throw new GZipTestException($"\nDecompress file error! Possibly archive file corrupted.");
                         }
                     }
                 }
             }
-            catch (GZipTestException e)
-            {
-                Console.WriteLine($"\n{e.Message}");
-            }
 
-            catch(Exception e)
+            catch(Exception ex)
             {
-                Console.WriteLine($"\nEnexpected error! Stacktrace:\n{e.StackTrace}");
+                Archivator.threadException = ex;
             }
         }
     }

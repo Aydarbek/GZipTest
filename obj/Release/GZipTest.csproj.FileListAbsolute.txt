@@ -1,0 +1,10 @@
+D:\Repos\GZipTest\bin\Release\GZipTest.exe.config
+D:\Repos\GZipTest\bin\Release\GZipTest.exe
+D:\Repos\GZipTest\bin\Release\GZipTest.pdb
+D:\Repos\GZipTest\bin\Release\Newtonsoft.Json.dll
+D:\Repos\GZipTest\bin\Release\Newtonsoft.Json.xml
+D:\Repos\GZipTest\obj\Release\GZipTest.csprojAssemblyReference.cache
+D:\Repos\GZipTest\obj\Release\GZipTest.csproj.CoreCompileInputs.cache
+D:\Repos\GZipTest\obj\Release\GZipTest.csproj.CopyComplete
+D:\Repos\GZipTest\obj\Release\GZipTest.exe
+D:\Repos\GZipTest\obj\Release\GZipTest.pdb

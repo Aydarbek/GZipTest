@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30517.126
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GZipTest", "GZipTest.csproj", "{C16E2836-CDF8-4987-AAF8-8496370BE54A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GZipIntegrationTests", "GZipIntegrationTests\GZipIntegrationTests.csproj", "{A96BD025-FBFC-4D1C-ADEC-99ACA0528D28}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GZipIntegrationTests", "GZipIntegrationTests\GZipIntegrationTests.csproj", "{A96BD025-FBFC-4D1C-ADEC-99ACA0528D28}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,8 +13,8 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C16E2836-CDF8-4987-AAF8-8496370BE54A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C16E2836-CDF8-4987-AAF8-8496370BE54A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C16E2836-CDF8-4987-AAF8-8496370BE54A}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{C16E2836-CDF8-4987-AAF8-8496370BE54A}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{C16E2836-CDF8-4987-AAF8-8496370BE54A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C16E2836-CDF8-4987-AAF8-8496370BE54A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A96BD025-FBFC-4D1C-ADEC-99ACA0528D28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU

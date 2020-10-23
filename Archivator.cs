@@ -14,29 +14,39 @@ namespace GZipTest
 {
     public class Archivator
     {
-        DateTime startTime;
-
         IFileReader fileReader;
         IStreamQueuer streamQueuer;
         IGZipProcessor gZipProcessor;
+
+        Thread fileOutputThread;
+        internal static Exception threadException;
+
         string operation;
+        long maxThreadsCount;
+        DateTime startTime;
 
         public Archivator(string operation)
         {
             this.operation = operation;
         }
-        
 
         public void ProcessFile(FileInfo sourceFile, FileInfo resultFile)
         {
-            startTime = DateTime.Now;
-
             try
             {
+                startTime = DateTime.Now;
+                SetUpThreadsLimit(sourceFile);
                 GetArchivatorTools(operation);
                 ValidateSourceFile(operation, sourceFile);
                 StartOutputStreamQueuer(resultFile);
                 StartFileProcessingThreads(sourceFile);
+
+                fileOutputThread.Join();
+
+                if (threadException != null)
+                    throw threadException;
+
+                ShowOperationResult();
             }
             catch (Exception)
             {
@@ -47,20 +57,33 @@ namespace GZipTest
             }
         }
 
+        private void SetUpThreadsLimit(FileInfo sourceFile)
+        {
+            if ("compress".Equals(operation)) 
+                maxThreadsCount = 10;
+            else if ("decompress".Equals(operation))
+                maxThreadsCount = 5;
+        }
+
         private void GetArchivatorTools(string operation)
         {
             fileReader = FileReaderFactory.GetFileReader(operation);
             streamQueuer = StreamQueuerFactory.GetStreamQueuer(operation);
-            streamQueuer.ShowResult = ShowOperationResult;
-
             gZipProcessor = GZipProcessorFactory.GetGZipProcessor(operation);
+        }
+
+        private void StartOutputStreamQueuer(FileInfo resultArchive)
+        {
+            streamQueuer.outputFile = resultArchive;
+            fileOutputThread = new Thread(new ThreadStart(streamQueuer.WriteBytesToFile));
+            fileOutputThread.Start();
         }
 
         private void StartFileProcessingThreads(FileInfo sourceFile)
         {
             fileReader.sourceFile = sourceFile;
 
-            for (int i = 1; i <= 5; i++)
+            for (int i = 1; i <= maxThreadsCount; i++)
             {
                 Thread blocksProcessingThread = new Thread(new ThreadStart(PrepareProcessedBlocks));
                 blocksProcessingThread.Start();
@@ -76,31 +99,32 @@ namespace GZipTest
                 ValidateFileFormat(sourceFile);
         }
 
-        private void StartOutputStreamQueuer(FileInfo resultArchive)
-        {
-            streamQueuer.outputFile = resultArchive;
-            Thread compressThread = new Thread(new ThreadStart(streamQueuer.WriteBytesToFile));
-            compressThread.Start();
-        }
-
         private void PrepareProcessedBlocks()
         {
-            FileBlock block;
-            byte[] processedBytes;
-
-            while (true)
+            try
             {
-                block = fileReader.ReadNextBlock();
+                FileBlock block;
+                byte[] processedBytes;
 
-                if (block.isNull)
-                    break;
+                while (true)
+                {
+                    block = fileReader.ReadNextBlock();
 
-                processedBytes = gZipProcessor.ProcessBytes(block.blockData);
-                streamQueuer.PutBytesToQueue(block.blockNum, processedBytes, block.isEndOfFile);
-            }           
+                    if (block.isNull)
+                        break;
+
+                    processedBytes = gZipProcessor.ProcessBytes(block.blockData);
+                    streamQueuer.PutBytesToQueue(block.blockNum, processedBytes, block.isEndOfFile);
+                }
+            }
+            catch (Exception ex)
+            {
+                threadException = ex;
+            }         
         }
 
-        internal void ShowOperationResult()
+
+        private void ShowOperationResult()
         {
             TimeSpan elapsedTime = DateTime.Now - startTime;
             Console.WriteLine($"\nFile {operation}ed in {elapsedTime.TotalSeconds:0.0} seconds");
@@ -109,9 +133,16 @@ namespace GZipTest
 
         private void ValidateFileFormat(FileInfo fileToRestore)
         {
-            using (FileStream fileStream = fileToRestore.OpenRead())
+            try
             {
-                FileHeader fileHeader = FileHeaderHelper.ReadFileHeader(fileStream);
+                using (FileStream fileStream = fileToRestore.OpenRead())
+                {
+                    FileHeader fileHeader = FileHeaderHelper.ReadFileHeader(fileStream);
+                }
+            }
+            catch (Exception)
+            {
+                throw;
             }
         }
     }

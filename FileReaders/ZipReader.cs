@@ -13,7 +13,7 @@ namespace GZipTest
         static ReaderWriterLock rwl = new ReaderWriterLock();
         static object locker = new object();
         public FileInfo sourceFile { get; set; }
-        private long offset;
+        long offset;
         FileHeader currentHeader;
 
 
@@ -47,7 +47,7 @@ namespace GZipTest
         private void ShowCurrentStatus()
         {
             float progress = (float)offset / (float)sourceFile.Length * 100;
-            Console.Write($"\rDecompressed {offset / 1024}/{sourceFile.Length / 1024} Kbytes ({progress:0.0}%)");
+            Console.Write($"\rProcessed {offset / 1024}/{sourceFile.Length / 1024} Kbytes ({progress:0.0}%)");
         }
     }
 }

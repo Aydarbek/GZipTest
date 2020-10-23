@@ -10,7 +10,6 @@ namespace GZipTest
     interface IStreamQueuer
     {
         FileInfo outputFile { get; set; }
-        Action ShowResult { get; set; }
         void PutBytesToQueue(int blockNum, byte[] bytes, bool isEndOfFile);
         void WriteBytesToFile();
     }

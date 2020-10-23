@@ -12,7 +12,6 @@ namespace GZipTest
     class CompressionQueuer : IStreamQueuer
     {
         ConcurrentQueue<FileBlock> streamQueue = new ConcurrentQueue<FileBlock>();
-        public Action ShowResult { get; set; }
         public FileInfo outputFile { get; set; }
         FileBlock nextBlock;
         FileHeader fileHeader;
@@ -20,43 +19,54 @@ namespace GZipTest
 
         public void PutBytesToQueue(int blockNum, byte[] bytes, bool isEndOfFile)
         {
-            streamQueue.Enqueue(new FileBlock(blockNum, bytes, isEndOfFile));
-            
-            if (isEndOfFile)
-                this.isEndOfFile = true;
+            try
+            {
+                streamQueue.Enqueue(new FileBlock(blockNum, bytes, isEndOfFile));
+
+                if (isEndOfFile)
+                    this.isEndOfFile = true;
+            }
+            catch (Exception ex)
+            {
+                Archivator.threadException = ex;
+            }
         }
 
         public void WriteBytesToFile()
         {
-            using (FileStream outputFileStream = outputFile.Create())
+            try
             {
-                while (true)
+                using (FileStream outputFileStream = outputFile.Create())
                 {
-                    if (!streamQueue.IsEmpty)
+                    while (true)
                     {
-                        streamQueue.TryDequeue(out nextBlock);
-
-                        fileHeader = new FileHeader(nextBlock.blockNum, nextBlock.blockData.Length, nextBlock.isEndOfFile);
-                        FileHeaderHelper.WriteFileHeader(outputFileStream, fileHeader);
-
-                        outputFileStream.Write(nextBlock.blockData, 0, nextBlock.blockData.Length);
-                    }
-
-                    else
-                    {
-                        if (isEndOfFile)
+                        if (!streamQueue.IsEmpty)
                         {
-                            Thread.Sleep(1000);
-                            if (streamQueue.IsEmpty)
-                            {
-                                ShowResult();
-                                break;
-                            }
+                            streamQueue.TryDequeue(out nextBlock);
+
+                            fileHeader = new FileHeader(nextBlock.blockNum, nextBlock.blockData.Length, nextBlock.isEndOfFile);
+                            FileHeaderHelper.WriteFileHeader(outputFileStream, fileHeader);
+
+                            outputFileStream.Write(nextBlock.blockData, 0, nextBlock.blockData.Length);
                         }
 
-                        Thread.Sleep(100);
+                        else
+                        {
+                            if (isEndOfFile)
+                            {
+                                Thread.Sleep(500);
+                                if (streamQueue.IsEmpty)
+                                    break;
+                            }
+
+                            Thread.Sleep(100);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Archivator.threadException = ex;
             }
         }
     }

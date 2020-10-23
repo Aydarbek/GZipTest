@@ -48,7 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Entities\FileHeader.cs" />
-    <Compile Include="Helpers\FileHeaderHelper.cs" />
+    <Compile Include="FileHeaderHelper\FileHeaderHelper.cs" />
     <Compile Include="Archivator.cs" />
     <Compile Include="FileReaders\FileReaderFactory.cs" />
     <Compile Include="GZipProcessors\GZipDecompressor.cs" />
