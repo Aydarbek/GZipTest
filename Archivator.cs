@@ -82,8 +82,6 @@ namespace GZipTest
 
         private void StartFileProcessingThreads(FileInfo sourceFile)
         {
-            fileReader.sourceFile = sourceFile;
-
             using (FileStream sourceFileStream = sourceFile.OpenRead())
             {
                 //PrepareProcessedBlocks(sourceFileStream);

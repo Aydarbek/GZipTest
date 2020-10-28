@@ -10,45 +10,41 @@ namespace GZipTest
 {
     class ZipReader : IFileReader
     {
-        static ReaderWriterLock rwl = new ReaderWriterLock();
         static object locker = new object();
-        public FileInfo sourceFile { get; set; }
-        long offset;
         FileHeader currentHeader;
+        byte[] zipBytes;
 
 
         public FileBlock ReadNextBlock(FileStream sourceZipFileStream)
         {
-            lock (locker)
+            try
             {
-                rwl.AcquireReaderLock(int.MaxValue);
-                //sourceZipFileStream.Seek(offset, SeekOrigin.Begin);
+                lock (locker)
+                {
+                    if (sourceZipFileStream.Position == sourceZipFileStream.Length)
+                        return new NullFileBlock();
 
-                if (sourceZipFileStream.Position == sourceZipFileStream.Length)
-                    return new NullFileBlock();
+                    currentHeader = FileHeaderHelper.ReadFileHeader(sourceZipFileStream);
+                    zipBytes = new byte[currentHeader.blockSize];
+                    sourceZipFileStream.Read(zipBytes, 0, zipBytes.Length);
 
-                currentHeader = FileHeaderHelper.ReadFileHeader(sourceZipFileStream);
-                byte[] zipBytes = new byte[currentHeader.blockSize];
-                sourceZipFileStream.Read(zipBytes, 0, zipBytes.Length);
+                    ShowCurrentStatus(sourceZipFileStream);
 
-                //offset += FileHeaderHelper.HEADER_SIZE + currentHeader.blockSize;
-
-                float progress = (float)sourceZipFileStream.Position / (float)sourceZipFileStream.Length * 100;
-                Console.Write($"\rProcessed {sourceZipFileStream.Position / 1024}/{sourceZipFileStream.Length / 1024} Kbytes ({progress:0.0}%)");
-
-                //ShowCurrentStatus();
-
-                rwl.ReleaseReaderLock();
-
-                return new FileBlock(currentHeader.blockNum, zipBytes, currentHeader.isEndOfFile);
-                
+                    return new FileBlock(currentHeader.blockNum, zipBytes, currentHeader.isEndOfFile);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return new NullFileBlock();
             }
         }
 
-        private void ShowCurrentStatus()
+        private void ShowCurrentStatus(FileStream sourceZipFileStream)
         {
-            float progress = (float)offset / (float)sourceFile.Length * 100;
-            Console.Write($"\rProcessed {offset / 1024}/{sourceFile.Length / 1024} Kbytes ({progress:0.0}%)");
+            float progress = (float)sourceZipFileStream.Position / (float)sourceZipFileStream.Length * 100;
+            Console.Write($"\rProcessed {sourceZipFileStream.Position / 1024}/{sourceZipFileStream.Length / 1024} Kbytes ({progress:0.0}%)");
         }
+
     }
 }
