@@ -17,34 +17,34 @@ namespace GZipTest
         long offset;
         int blockNum;
         
-        public FileBlock ReadNextBlock()
+        public FileBlock ReadNextBlock(FileStream sourceFileStream)
         {
             try
             {
                 byte[] block;
                 lock (locker)
                 {
-                    using (FileStream sourceFileStream = sourceFile.OpenRead())
-                    {
-                        readWriteLock.AcquireReaderLock(int.MaxValue);
+                    readWriteLock.AcquireReaderLock(int.MaxValue);
 
-                        block = new byte[Math.Min(partSize, sourceFileStream.Length - offset)];
+                    block = new byte[Math.Min(partSize, sourceFileStream.Length - sourceFileStream.Position)];
 
-                        sourceFileStream.Seek(offset, SeekOrigin.Begin);
+                    //sourceFileStream.Seek(offset, SeekOrigin.Begin);
 
-                        if (sourceFileStream.Position == sourceFileStream.Length)
-                            return new NullFileBlock();
+                    if (sourceFileStream.Position == sourceFileStream.Length)
+                        return new NullFileBlock();
 
-                        offset += block.Length;
-                        sourceFileStream.Read(block, 0, block.Length);
+                    //offset += block.Length;
+                    sourceFileStream.Read(block, 0, block.Length);
 
-                        bool isEndOfFile = offset == sourceFileStream.Length;
+                    bool isEndOfFile = sourceFileStream.Position == sourceFileStream.Length;
 
-                        readWriteLock.ReleaseReaderLock();
-                        ShowCurrentStatus();
+                    readWriteLock.ReleaseReaderLock();
+                    float progress = (float)sourceFileStream.Position / (float)sourceFileStream.Length * 100;
+                    Console.Write($"\rProcessed {sourceFileStream.Position / 1024}/{sourceFileStream.Length / 1024} Kbytes ({progress:0.0}%)");
 
-                        return new FileBlock(++blockNum, block, isEndOfFile);
-                    }
+                    //ShowCurrentStatus();
+
+                    return new FileBlock(++blockNum, block, isEndOfFile);
                 }
             }
             catch (Exception e)

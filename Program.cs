@@ -15,6 +15,10 @@ namespace GZipTest
         {
             try
             {
+                //Archivator archivator = new Archivator("decompress");
+                //archivator.ProcessFile(new FileInfo(@"D:\Repos\GZipTest\bin\Release\Europe.gzt"), new FileInfo(@"D:\Repos\GZipTest\bin\Release\Europe.file"));
+                //Console.Read();
+
                 ValidateInput(args);
                 Archivator archivator = new Archivator(args[0]);
                 archivator.ProcessFile(new FileInfo(args[1]), new FileInfo(args[2]));

@@ -19,6 +19,7 @@ namespace GZipTest
         IGZipProcessor gZipProcessor;
 
         Thread fileOutputThread;
+        List<Thread> blockProcessingThreads = new List<Thread>();
         internal static Exception threadException;
 
         string operation;
@@ -83,10 +84,19 @@ namespace GZipTest
         {
             fileReader.sourceFile = sourceFile;
 
-            for (int i = 1; i <= maxThreadsCount; i++)
+            using (FileStream sourceFileStream = sourceFile.OpenRead())
             {
-                Thread blocksProcessingThread = new Thread(new ThreadStart(PrepareProcessedBlocks));
-                blocksProcessingThread.Start();
+                //PrepareProcessedBlocks(sourceFileStream);
+
+                for (int i = 1; i <= maxThreadsCount; i++)
+                {
+                    Thread blocksProcessingThread = new Thread(new ParameterizedThreadStart(PrepareProcessedBlocks));
+                    blocksProcessingThread.Start(sourceFileStream);
+                    blockProcessingThreads.Add(blocksProcessingThread);
+                }
+
+                foreach (Thread thread in blockProcessingThreads)
+                    thread.Join();
             }
         }
 
@@ -99,8 +109,10 @@ namespace GZipTest
                 ValidateFileFormat(sourceFile);
         }
 
-        private void PrepareProcessedBlocks()
+        private void PrepareProcessedBlocks(object fileStream)
         {
+            FileStream sourceFileStream = (FileStream)fileStream;
+
             try
             {
                 FileBlock block;
@@ -108,7 +120,7 @@ namespace GZipTest
 
                 while (true)
                 {
-                    block = fileReader.ReadNextBlock();
+                    block = fileReader.ReadNextBlock((FileStream)fileStream);
 
                     if (block.isNull)
                         break;

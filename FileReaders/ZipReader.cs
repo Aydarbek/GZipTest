@@ -17,30 +17,31 @@ namespace GZipTest
         FileHeader currentHeader;
 
 
-        public FileBlock ReadNextBlock()
+        public FileBlock ReadNextBlock(FileStream sourceZipFileStream)
         {
             lock (locker)
             {
-                using (FileStream sourceZipFileStream = sourceFile.OpenRead())
-                {
-                    rwl.AcquireReaderLock(int.MaxValue);
-                    sourceZipFileStream.Seek(offset, SeekOrigin.Begin);
+                rwl.AcquireReaderLock(int.MaxValue);
+                //sourceZipFileStream.Seek(offset, SeekOrigin.Begin);
 
-                    if (sourceZipFileStream.Position == sourceZipFileStream.Length)
-                        return new NullFileBlock();
+                if (sourceZipFileStream.Position == sourceZipFileStream.Length)
+                    return new NullFileBlock();
 
-                    currentHeader = FileHeaderHelper.ReadFileHeader(sourceZipFileStream);
-                    byte[] zipBytes = new byte[currentHeader.blockSize];
-                    sourceZipFileStream.Read(zipBytes, 0, zipBytes.Length);
+                currentHeader = FileHeaderHelper.ReadFileHeader(sourceZipFileStream);
+                byte[] zipBytes = new byte[currentHeader.blockSize];
+                sourceZipFileStream.Read(zipBytes, 0, zipBytes.Length);
 
-                    offset += FileHeaderHelper.HEADER_SIZE + currentHeader.blockSize;
+                //offset += FileHeaderHelper.HEADER_SIZE + currentHeader.blockSize;
 
-                    ShowCurrentStatus();
+                float progress = (float)sourceZipFileStream.Position / (float)sourceZipFileStream.Length * 100;
+                Console.Write($"\rProcessed {sourceZipFileStream.Position / 1024}/{sourceZipFileStream.Length / 1024} Kbytes ({progress:0.0}%)");
 
-                    rwl.ReleaseReaderLock();
+                //ShowCurrentStatus();
 
-                    return new FileBlock(currentHeader.blockNum, zipBytes, currentHeader.isEndOfFile);
-                }
+                rwl.ReleaseReaderLock();
+
+                return new FileBlock(currentHeader.blockNum, zipBytes, currentHeader.isEndOfFile);
+                
             }
         }
 

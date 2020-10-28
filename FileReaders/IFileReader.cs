@@ -10,6 +10,6 @@ namespace GZipTest
     interface IFileReader
     {
         FileInfo sourceFile { get; set; }
-        FileBlock ReadNextBlock();
+        FileBlock ReadNextBlock(FileStream fileStream);
     }
 }
