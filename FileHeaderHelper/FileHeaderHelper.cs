@@ -20,9 +20,7 @@ namespace GZipTest
 
                 string headerInfo = JsonConvert.SerializeObject(fileHeader);
                 byte[] headerInfoBytes = Encoding.Default.GetBytes(headerInfo);
-
-                for (int i = 0; i < headerInfoBytes.Length; i++)
-                    headerStream[i] = headerInfoBytes[i];
+                Array.Copy(headerInfoBytes, headerStream, headerInfoBytes.Length);
 
                 stream.Write(headerStream, 0, HEADER_SIZE);
             }

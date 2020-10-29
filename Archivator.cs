@@ -84,8 +84,6 @@ namespace GZipTest
         {
             using (FileStream sourceFileStream = sourceFile.OpenRead())
             {
-                //PrepareProcessedBlocks(sourceFileStream);
-
                 for (int i = 1; i <= maxThreadsCount; i++)
                 {
                     Thread blocksProcessingThread = new Thread(new ParameterizedThreadStart(PrepareProcessedBlocks));
@@ -109,8 +107,6 @@ namespace GZipTest
 
         private void PrepareProcessedBlocks(object fileStream)
         {
-            FileStream sourceFileStream = (FileStream)fileStream;
-
             try
             {
                 FileBlock block;

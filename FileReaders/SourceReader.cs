@@ -33,9 +33,9 @@ namespace GZipTest
                     return new FileBlock(++blockNum, block, isEndOfFile);
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine(e.Message);
+                Archivator.threadException = ex;
                 return new NullFileBlock();
             }
         }

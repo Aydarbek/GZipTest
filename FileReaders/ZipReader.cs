@@ -10,7 +10,7 @@ namespace GZipTest
 {
     class ZipReader : IFileReader
     {
-        static object locker = new object();
+        static object locker = new object();    
         FileHeader currentHeader;
         byte[] zipBytes;
 
@@ -33,9 +33,9 @@ namespace GZipTest
                     return new FileBlock(currentHeader.blockNum, zipBytes, currentHeader.isEndOfFile);
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine(e.Message);
+                Archivator.threadException = ex;
                 return new NullFileBlock();
             }
         }

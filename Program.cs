@@ -15,10 +15,6 @@ namespace GZipTest
         {
             try
             {
-                //Archivator archivator = new Archivator("decompress");
-                //archivator.ProcessFile(new FileInfo(@"D:\Repos\GZipTest\bin\Release\Europe.gzt"), new FileInfo(@"D:\Repos\GZipTest\bin\Release\Europe.file"));
-                //Console.Read();
-
                 ValidateInput(args);
                 Archivator archivator = new Archivator(args[0]);
                 archivator.ProcessFile(new FileInfo(args[1]), new FileInfo(args[2]));
@@ -27,7 +23,7 @@ namespace GZipTest
         }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);                
+                Console.WriteLine(e.Message);
                 return 1;
             }
         }
@@ -38,7 +34,7 @@ namespace GZipTest
                 args.Length < 3 ||
                 (!("compress".Equals(args[0])) && !("decompress".Equals(args[0]))))
                 throw new ArgumentException(argumentExceptionText);
-            else if (args != null && args[1].Equals(args[2]))
+            else if (args[1].Equals(args[2]))
                 throw new GZipTestException("Input and output files cannot be the same!");
         }
     }
